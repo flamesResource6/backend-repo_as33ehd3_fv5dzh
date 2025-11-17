@@ -38,6 +38,36 @@ class Product(BaseModel):
     category: str = Field(..., description="Product category")
     in_stock: bool = Field(True, description="Whether product is in stock")
 
+# Bioethics forum schemas
+
+class Topic(BaseModel):
+    """
+    Topics users can start with a prompt. Collection: "topic"
+    """
+    title: str = Field(..., description="Short topic title")
+    prompt: str = Field(..., description="Ethical question or prompt")
+    author: Optional[str] = Field(None, description="Display name of topic creator")
+    agree_count: int = Field(0, ge=0, description="Number of users who agree")
+    disagree_count: int = Field(0, ge=0, description="Number of users who disagree")
+
+class Post(BaseModel):
+    """
+    Posts are arguments or responses under a topic. Collection: "post"
+    """
+    topic_id: str = Field(..., description="ID of the parent topic")
+    content: str = Field(..., description="Post body text")
+    author: Optional[str] = Field(None, description="Display name of author")
+    like_count: int = Field(0, ge=0, description="Number of likes on this post")
+
+class Comment(BaseModel):
+    """
+    Comments under a post. Collection: "comment"
+    """
+    post_id: str = Field(..., description="ID of the parent post")
+    content: str = Field(..., description="Comment body text")
+    author: Optional[str] = Field(None, description="Display name of commenter")
+    like_count: int = Field(0, ge=0, description="Number of likes on this comment")
+
 # Add your own schemas here:
 # --------------------------------------------------
 
