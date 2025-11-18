@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Optional
 from bson import ObjectId
+from datetime import datetime, timezone
 
 from database import db, create_document, get_documents
 
@@ -116,7 +117,12 @@ def vote_topic(topic_id: str, payload: VoteAction):
         raise HTTPException(status_code=400, detail="Invalid vote")
     oid = ensure_objectid(topic_id)
     inc_field = "agree_count" if payload.vote == "agree" else "disagree_count"
-    res = db["topic"].update_one({"_id": oid}, {"$inc": {inc_field: 1}, "$set": {"updated_at": db.command({"serverStatus":1})['localTime']}})
+    # Use application-side timestamp to avoid serverStatus permission issues
+    now = datetime.now(timezone.utc)
+    res = db["topic"].update_one(
+        {"_id": oid},
+        {"$inc": {inc_field: 1}, "$set": {"updated_at": now}}
+    )
     if res.matched_count == 0:
         raise HTTPException(status_code=404, detail="Topic not found")
     doc = db["topic"].find_one({"_id": oid})
@@ -156,7 +162,8 @@ def like_post(post_id: str, payload: LikeAction):
     if payload.action != "like":
         raise HTTPException(status_code=400, detail="Invalid action")
     oid = ensure_objectid(post_id)
-    res = db["post"].update_one({"_id": oid}, {"$inc": {"like_count": 1}, "$set": {"updated_at": db.command({"serverStatus":1})['localTime']}})
+    now = datetime.now(timezone.utc)
+    res = db["post"].update_one({"_id": oid}, {"$inc": {"like_count": 1}, "$set": {"updated_at": now}})
     if res.matched_count == 0:
         raise HTTPException(status_code=404, detail="Post not found")
     doc = db["post"].find_one({"_id": oid})
